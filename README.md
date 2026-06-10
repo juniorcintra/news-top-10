@@ -1,98 +1,156 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# news-top-10
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Pipeline automatizado que coleta as **top 10 notícias do dia** de fontes RSS brasileiras e internacionais, rankeia por relevância e envia um resumo via **WhatsApp** (Twilio).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Como funciona
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+```
+Cron Job (configurável)
+    └── CollectorService    → busca artigos de 8 feeds RSS em paralelo
+    └── RankingService      → pontua e seleciona top 10 (mín. 2 por categoria)
+    └── SummaryService      → formata mensagem e persiste no banco
+    └── WhatsappService     → envia via Twilio (ou exibe no console em dry-run)
 ```
 
-## Compile and run the project
+### Algoritmo de ranking
+
+Cada artigo recebe um score de 0 a 1 composto por:
+
+| Peso | Dimensão                                                      |
+| ---- | ------------------------------------------------------------- |
+| 0.4  | Recência (decai linearmente em 24h)                           |
+| 0.3  | Keywords relevantes por categoria                             |
+| 0.2  | Peso da fonte (Folha > BBC > InfoMoney > G1 > Agência Brasil) |
+| 0.1  | Engajamento estimado (tamanho da descrição)                   |
+
+Garante **mínimo de 2 artigos por categoria** (economia, negócios, política) antes de preencher os slots restantes pelo score geral.
+
+### Fontes RSS
+
+| Fonte                   | Categoria |
+| ----------------------- | --------- |
+| G1 Economia             | Economia  |
+| Folha Mercado           | Economia  |
+| Agência Brasil Economia | Economia  |
+| InfoMoney               | Negócios  |
+| BBC Business            | Negócios  |
+| G1 Política             | Política  |
+| Folha Poder             | Política  |
+| Agência Brasil Política | Política  |
+
+## Stack
+
+- **NestJS 11** + TypeScript
+- **Prisma 7** + PostgreSQL (Supabase)
+- **Twilio** — envio de WhatsApp
+- **rss-parser** — leitura dos feeds
+- **@nestjs/schedule** — cron job
+
+## Pré-requisitos
+
+- Node.js 18+
+- PostgreSQL (recomendado: [Supabase](https://supabase.com) — plano gratuito)
+- Conta Twilio com WhatsApp Sandbox ativado
+
+## Instalação
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+## Configuração
+
+Copie o `.env.example` e preencha as variáveis:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp .env.example .env
 ```
 
-## Deployment
+```env
+# Banco de dados (Supabase)
+DATABASE_URL="postgresql://USER:PASSWORD@host:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://USER:PASSWORD@host:5432/postgres"
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+# WhatsApp (Twilio)
+TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+TWILIO_AUTH_TOKEN="seu_auth_token"
+TWILIO_WHATSAPP_FROM="+14155238886"
+WHATSAPP_RECIPIENT="5511999999999"
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+# Agendamento (cron expression)
+CRON_SCHEDULE="0 7 * * *"   # todo dia às 7h
+
+# App
+NODE_ENV="development"
+PORT=3000
+```
+
+> **Dry-run:** se as credenciais do Twilio não estiverem configuradas, a mensagem é exibida no console em vez de ser enviada.
+
+## Banco de dados
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Criar as tabelas (primeira vez)
+npx prisma migrate dev --name init
+
+# Regenerar o client após mudanças no schema
+npx prisma generate
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Executando
 
-## Resources
+```bash
+# Desenvolvimento (hot reload)
+npm run start:dev
 
-Check out a few resources that may come in handy when working with NestJS:
+# Produção
+npm run build
+npm run start:prod
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Configurando o Twilio WhatsApp Sandbox
 
-## Support
+1. Crie conta em [twilio.com/console](https://console.twilio.com)
+2. Acesse **Messaging → Try it out → Send a WhatsApp message**
+3. Envie `join <palavra>` para `+1 415 523 8886` pelo seu WhatsApp
+4. Copie `Account SID` e `Auth Token` do painel para o `.env`
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Estrutura do projeto
 
-## Stay in touch
+```
+src/
+├── config/                  # Configurações tipadas (app, whatsapp)
+├── prisma/                  # PrismaService (global)
+├── generated/prisma/        # Client gerado automaticamente (não editar)
+└── modules/
+    ├── collector/           # Busca artigos via RSS
+    │   ├── sources/         # BaseSource, RssSource
+    │   └── interfaces/      # RawNewsItem, NewsCategory
+    ├── ranking/             # Scoring e seleção top 10
+    │   └── interfaces/      # ScoredNewsItem
+    ├── summary/             # Formata e persiste o resumo diário
+    ├── notifier/            # Envio via Twilio WhatsApp
+    └── scheduler/           # Orquestra o pipeline via cron
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+prisma/
+├── schema.prisma            # Modelos: NewsArticle, DailySummary, NotificationLog
+└── migrations/              # Histórico de migrações
+```
 
-## License
+## Modelos do banco
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+| Tabela              | Descrição                                 |
+| ------------------- | ----------------------------------------- |
+| `news_articles`     | Artigos coletados (upsert por URL)        |
+| `daily_summaries`   | Resumo gerado por dia (único por data)    |
+| `notification_logs` | Histórico de envios (status + SID Twilio) |
+
+## Scripts úteis
+
+```bash
+npm run start:dev      # Desenvolvimento com hot reload
+npm run build          # Build de produção
+npm run lint           # Lint + auto-fix
+npm run test           # Testes unitários
+npx prisma studio      # Interface visual do banco
+```
