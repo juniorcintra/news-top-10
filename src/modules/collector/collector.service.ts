@@ -5,12 +5,12 @@ import { RawNewsItem } from './interfaces/raw-news.interface';
 const RSS_FEEDS: RssFeedConfig[] = [
   {
     name: 'G1 Economia',
-    url: 'https://g1.globo.com/rss/g1/economia/noticia/',
+    url: 'https://g1.globo.com/rss/g1/economia',
     category: 'economy',
   },
   {
     name: 'G1 Política',
-    url: 'https://g1.globo.com/rss/g1/politica/',
+    url: 'https://g1.globo.com/rss/g1/politica',
     category: 'politics',
   },
   {
@@ -19,18 +19,23 @@ const RSS_FEEDS: RssFeedConfig[] = [
     category: 'business',
   },
   {
-    name: 'Valor Econômico',
-    url: 'https://valor.globo.com/rss/ultimas-noticias/',
+    name: 'Folha Mercado',
+    url: 'https://feeds.folha.uol.com.br/mercado/rss091.xml',
     category: 'economy',
   },
   {
+    name: 'Folha Poder',
+    url: 'https://feeds.folha.uol.com.br/poder/rss091.xml',
+    category: 'politics',
+  },
+  {
     name: 'Agência Brasil Economia',
-    url: 'https://agenciabrasil.ebc.com.br/rss/economia/feed.rss',
+    url: 'http://agenciabrasil.ebc.com.br/rss/economia/feed.xml',
     category: 'economy',
   },
   {
     name: 'Agência Brasil Política',
-    url: 'https://agenciabrasil.ebc.com.br/rss/politica/feed.rss',
+    url: 'http://agenciabrasil.ebc.com.br/rss/politica/feed.xml',
     category: 'politics',
   },
   {
