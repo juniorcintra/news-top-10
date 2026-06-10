@@ -62,14 +62,17 @@ const CATEGORY_KEYWORDS: Record<NewsCategory, string[]> = {
 };
 
 const SOURCE_WEIGHTS: Record<string, number> = {
-  'Valor Econômico': 1.0,
+  'Folha Mercado': 1.0,
   'BBC Business': 0.9,
   InfoMoney: 0.85,
+  'Folha Poder': 0.85,
   'G1 Economia': 0.75,
   'G1 Política': 0.75,
   'Agência Brasil Economia': 0.65,
   'Agência Brasil Política': 0.65,
 };
+
+const MIN_PER_CATEGORY = 2;
 
 const DEFAULT_SOURCE_WEIGHT = 0.5;
 const MAX_AGE_MINUTES = 24 * 60;
@@ -95,10 +98,33 @@ export class RankingService {
 
     scored.sort((a, b) => b.score - a.score);
 
-    const top = scored.slice(0, topN);
+    const byCategory = new Map<string, ScoredNewsItem[]>();
+    for (const article of scored) {
+      const group = byCategory.get(article.category) ?? [];
+      group.push(article);
+      byCategory.set(article.category, group);
+    }
+
+    const selected = new Set<ScoredNewsItem>();
+
+    for (const group of byCategory.values()) {
+      group.slice(0, MIN_PER_CATEGORY).forEach((a) => selected.add(a));
+    }
+
+    for (const article of scored) {
+      if (selected.size >= topN) break;
+      selected.add(article);
+    }
+
+    const top = [...selected].sort((a, b) => b.score - a.score).slice(0, topN);
+
+    const dist = [...byCategory.keys()]
+      .map((cat) => `${cat}:${top.filter((a) => a.category === cat).length}`)
+      .join(', ');
 
     this.logger.log(
       `Ranked ${articles.length} articles → top ${top.length} selected. ` +
+        `Distribution: [${dist}]. ` +
         `Score range: ${top[0]?.score.toFixed(3)} → ${top[top.length - 1]?.score.toFixed(3)}`,
     );
 
