@@ -72,8 +72,6 @@ const SOURCE_WEIGHTS: Record<string, number> = {
   'Agência Brasil Política': 0.65,
 };
 
-const MIN_PER_CATEGORY = 2;
-
 const DEFAULT_SOURCE_WEIGHT = 0.5;
 const MAX_AGE_MINUTES = 24 * 60;
 const KEYWORD_MATCH_THRESHOLD = 3;
@@ -83,7 +81,7 @@ const ENGAGEMENT_DESCRIPTION_LENGTH = 400;
 export class RankingService {
   private readonly logger = new Logger(RankingService.name);
 
-  rank(articles: RawNewsItem[], topN = 10): ScoredNewsItem[] {
+  rank(articles: RawNewsItem[], topN = 6): ScoredNewsItem[] {
     if (articles.length === 0) {
       this.logger.warn('No articles to rank.');
       return [];
@@ -96,39 +94,30 @@ export class RankingService {
       score: this.calculateScore(article, now),
     }));
 
-    scored.sort((a, b) => b.score - a.score);
+    const selected = [
+      ...scored
+        .filter((a) => a.category === 'politics')
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 2),
 
-    const byCategory = new Map<string, ScoredNewsItem[]>();
-    for (const article of scored) {
-      const group = byCategory.get(article.category) ?? [];
-      group.push(article);
-      byCategory.set(article.category, group);
-    }
+      ...scored
+        .filter((a) => a.category === 'economy')
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 2),
 
-    const selected = new Set<ScoredNewsItem>();
+      ...scored
+        .filter((a) => a.category === 'business')
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 2),
+    ];
 
-    for (const group of byCategory.values()) {
-      group.slice(0, MIN_PER_CATEGORY).forEach((a) => selected.add(a));
-    }
-
-    for (const article of scored) {
-      if (selected.size >= topN) break;
-      selected.add(article);
-    }
-
-    const top = [...selected].sort((a, b) => b.score - a.score).slice(0, topN);
-
-    const dist = [...byCategory.keys()]
-      .map((cat) => `${cat}:${top.filter((a) => a.category === cat).length}`)
-      .join(', ');
+    const result = selected.sort((a, b) => b.score - a.score).slice(0, topN);
 
     this.logger.log(
-      `Ranked ${articles.length} articles → top ${top.length} selected. ` +
-        `Distribution: [${dist}]. ` +
-        `Score range: ${top[0]?.score.toFixed(3)} → ${top[top.length - 1]?.score.toFixed(3)}`,
+      `Ranked ${articles.length} articles → selected ${result.length}.`,
     );
 
-    return top;
+    return result;
   }
 
   private calculateScore(article: RawNewsItem, now: Date): number {
@@ -147,8 +136,13 @@ export class RankingService {
 
   private scoreKeywords(article: RawNewsItem): number {
     const text = `${article.title} ${article.description ?? ''}`.toLowerCase();
-    const keywords = CATEGORY_KEYWORDS[article.category];
-    const matches = keywords.filter((kw) => text.includes(kw)).length;
+
+    const keywords = CATEGORY_KEYWORDS[article.category] ?? [];
+
+    const matches = keywords.filter((keyword) =>
+      text.includes(keyword.toLowerCase()),
+    ).length;
+
     return Math.min(matches / KEYWORD_MATCH_THRESHOLD, 1);
   }
 
@@ -157,7 +151,10 @@ export class RankingService {
   }
 
   private scoreEngagement(description: string | null): number {
-    if (!description) return 0;
+    if (!description) {
+      return 0;
+    }
+
     return Math.min(description.length / ENGAGEMENT_DESCRIPTION_LENGTH, 1);
   }
 }

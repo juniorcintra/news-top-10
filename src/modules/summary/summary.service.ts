@@ -50,7 +50,24 @@ export class SummaryService {
       year: 'numeric',
     });
 
-    const lines: string[] = [`*TOP 10 NOTICIAS DO DIA - ${dateStr}*`, ''];
+    const currentTime = new Date().toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const saudacao =
+      currentTime < '12:00'
+        ? 'Bom dia!'
+        : currentTime > '12:00' && currentTime < '18:00'
+          ? 'Boa tarde!'
+          : 'Boa noite!';
+
+    const lines: string[] = [
+      saudacao,
+      '',
+      `*TOP 6 NOTICIAS DO DIA - ${dateStr} - ${currentTime}*`,
+      '',
+    ];
 
     articles.forEach((article, index) => {
       const label =
