@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Category {
+  economy
+  business
+  politics
+}
+
+enum NotifyStatus {
+  sent
+  failed
+}
+
+model NewsArticle {
+  id             String   @id @default(uuid())
+  sourceName     String   @map("source_name") @db.VarChar(100)
+  title          String   @db.Text
+  description    String?  @db.Text
+  url            String   @unique @db.Text
+  publishedAt    DateTime @map("published_at")
+  category       Category
+  relevanceScore Float?   @map("relevance_score")
+  collectedAt    DateTime @default(now()) @map("collected_at")
+
+  @@map("news_articles")
+}
+
+model DailySummary {
+  id            String            @id @default(uuid())
+  summaryDate   DateTime          @unique @map("summary_date") @db.Date
+  content       String            @db.Text
+  articleIds    String[]          @map("articles_ids")
+  tokensUsed    Int               @map("tokens_used")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  notifications NotificationLog[]
+
+  @@map("daily_summaries")
+}
+
+model NotificationLog {
+  id               String       @id @default(uuid())
+  summaryId        String       @map("summary_id")
+  summary          DailySummary @relation(fields: [summaryId], references: [id])
+  recipient        String       @db.VarChar(50)
+  status           NotifyStatus
+  providerResponse String?      @map("provider_response") @db.Text
+  sentAt           DateTime     @default(now()) @map("sent_at")
+
+  @@map("notification_logs")
+}
