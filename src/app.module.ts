@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import appConfig from './config/app.config';
 import openaiConfig from './config/openai.config';
 import whatsappConfig from './config/whatsapp.config';
@@ -14,7 +16,9 @@ import whatsappConfig from './config/whatsapp.config';
       load: [appConfig, openaiConfig, whatsappConfig],
       envFilePath: '.env',
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
