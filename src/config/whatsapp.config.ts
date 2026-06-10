@@ -1,7 +1,8 @@
 import { registerAs } from '@nestjs/config';
 
 export default registerAs('whatsapp', () => ({
-  apiKey: process.env.WHATSAPP_API_KEY,
-  instanceId: process.env.WHATSAPP_INSTANCE_ID,
+  accountSid: process.env.TWILIO_ACCOUNT_SID,
+  authToken: process.env.TWILIO_AUTH_TOKEN,
+  from: process.env.TWILIO_WHATSAPP_FROM,
   recipient: process.env.WHATSAPP_RECIPIENT,
 }));
