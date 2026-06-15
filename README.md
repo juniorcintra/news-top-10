@@ -1,56 +1,56 @@
-# news-top-10
+# Calmai
 
-Pipeline automatizado que coleta as **top 10 notícias do dia** de fontes RSS brasileiras e internacionais, rankeia por relevância e envia um resumo via **WhatsApp** (Twilio).
+Chatbot de **check-in diário de bem-estar** para empreendedores e colaboradores via **WhatsApp**. Envia perguntas personalizadas de segunda a sexta, analisa as respostas com IA (OpenAI) e detecta padrões críticos para acionar suporte confidencial.
 
 ## Como funciona
 
 ```
-Cron Job (configurável)
-    └── CollectorService    → busca artigos de 8 feeds RSS em paralelo
-    └── RankingService      → pontua e seleciona top 10 (mín. 2 por categoria)
-    └── SummaryService      → formata mensagem e persiste no banco
-    └── WhatsappService     → envia via Twilio (ou exibe no console em dry-run)
+Cron 08:30 (seg–sex)
+    └── CheckinService.dispatchMorningCheckin()
+        └── Busca todos os usuários ativos no banco
+        └── Envia mensagem do dia via Twilio WhatsApp
+
+Usuário responde "1", "2", "3" ou "4"
+    └── POST /webhook/whatsapp  (Twilio → ngrok → app)
+        └── WebhookService.handleIncoming()
+            └── findOrCreate(phone)          → auto-cadastro
+            └── CheckinService.processResponse()
+                └── parseResponse()          → identifica opção
+                └── AiService.generateCheckinResponse()  → resposta empática
+                └── Salva CheckIn no banco   → score + isCritical
+                └── Envia resposta ao usuário
 ```
 
-### Algoritmo de ranking
+### Pilares de bem-estar por dia
 
-Cada artigo recebe um score de 0 a 1 composto por:
+| Dia     | Pilar    | Tema                         |
+| ------- | -------- | ---------------------------- |
+| Segunda | Humor    | Energia e foco para a semana |
+| Terça   | Nutrição | Alimentação e hidratação     |
+| Quarta  | Fitness  | Movimento e exercício        |
+| Quinta  | Mental   | Carga de trabalho / burnout  |
+| Sexta   | Sono     | Qualidade do descanso        |
 
-| Peso | Dimensão                                                      |
-| ---- | ------------------------------------------------------------- |
-| 0.4  | Recência (decai linearmente em 24h)                           |
-| 0.3  | Keywords relevantes por categoria                             |
-| 0.2  | Peso da fonte (Folha > BBC > InfoMoney > G1 > Agência Brasil) |
-| 0.1  | Engajamento estimado (tamanho da descrição)                   |
+### Escalada crítica
 
-Garante **mínimo de 2 artigos por categoria** (economia, negócios, política) antes de preencher os slots restantes pelo score geral.
-
-### Fontes RSS
-
-| Fonte                   | Categoria |
-| ----------------------- | --------- |
-| G1 Economia             | Economia  |
-| Folha Mercado           | Economia  |
-| Agência Brasil Economia | Economia  |
-| InfoMoney               | Negócios  |
-| BBC Business            | Negócios  |
-| G1 Política             | Política  |
-| Folha Poder             | Política  |
-| Agência Brasil Política | Política  |
+- Respostas com score ≤ 1 são marcadas como `isCritical = true`
+- A partir de **3 dias consecutivos críticos**, a IA aciona mensagem de suporte confidencial
+- Todos os dados são anonimizados no modelo `AggregatedMetric` para dashboards corporativos
 
 ## Stack
 
 - **NestJS 11** + TypeScript
 - **Prisma 7** + PostgreSQL (Supabase)
-- **Twilio** — envio de WhatsApp
-- **rss-parser** — leitura dos feeds
-- **@nestjs/schedule** — cron job
+- **Twilio** — WhatsApp Business API (Sandbox)
+- **OpenAI** — respostas empáticas por IA (opcional — fallback estático sem custo)
+- **@nestjs/schedule** — cron jobs para disparo diário
 
 ## Pré-requisitos
 
 - Node.js 18+
 - PostgreSQL (recomendado: [Supabase](https://supabase.com) — plano gratuito)
 - Conta Twilio com WhatsApp Sandbox ativado
+- (Opcional) Conta OpenAI para respostas com IA
 
 ## Instalação
 
@@ -60,11 +60,11 @@ npm install
 
 ## Configuração
 
-Copie o `.env.example` e preencha as variáveis:
-
 ```bash
 cp .env.example .env
 ```
+
+Preencha o `.env`:
 
 ```env
 # Banco de dados (Supabase)
@@ -75,26 +75,34 @@ DIRECT_URL="postgresql://USER:PASSWORD@host:5432/postgres"
 TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 TWILIO_AUTH_TOKEN="seu_auth_token"
 TWILIO_WHATSAPP_FROM="+14155238886"
-WHATSAPP_RECIPIENT="5511999999999"
 
-# Agendamento (cron expression)
-CRON_SCHEDULE="0 7 * * *"   # todo dia às 7h
+# OpenAI (opcional — sem a key usa respostas estáticas, zero custo)
+OPENAI_API_KEY=""
+OPENAI_MODEL="gpt-4o-mini"
+
+# Agendamento (cron, seg–sex)
+MORNING_CRON="30 8 * * 1-5"
+EVENING_CRON="30 20 * * 1-5"
 
 # App
 NODE_ENV="development"
 PORT=3000
 ```
 
-> **Dry-run:** se as credenciais do Twilio não estiverem configuradas, a mensagem é exibida no console em vez de ser enviada.
+> **Dry-run WhatsApp:** sem credenciais Twilio, as mensagens são exibidas no console.  
+> **Dry-run IA:** sem `OPENAI_API_KEY`, usa respostas estáticas por pilar/score — sem custo.
 
 ## Banco de dados
 
 ```bash
-# Criar as tabelas (primeira vez)
-npx prisma migrate dev --name init
+# Criar tabelas (primeira vez)
+npx prisma migrate dev --name init-calmai
 
-# Regenerar o client após mudanças no schema
+# Regenerar client após mudanças no schema
 npx prisma generate
+
+# Interface visual
+npx prisma studio
 ```
 
 ## Executando
@@ -110,40 +118,72 @@ npm run start:prod
 
 ## Configurando o Twilio WhatsApp Sandbox
 
-1. Crie conta em [twilio.com/console](https://console.twilio.com)
-2. Acesse **Messaging → Try it out → Send a WhatsApp message**
-3. Envie `join <palavra>` para `+1 415 523 8886` pelo seu WhatsApp
-4. Copie `Account SID` e `Auth Token` do painel para o `.env`
+1. Crie conta em [console.twilio.com](https://console.twilio.com)
+2. **Messaging → Try it out → Send a WhatsApp message**
+3. Envie `join <palavra-do-sandbox>` para `+1 415 523 8886` pelo seu WhatsApp
+4. **Messaging → Settings → WhatsApp Sandbox Settings**
+5. Campo **"When a message comes in"**: `https://SEU-DOMINIO/webhook/whatsapp` (método: POST)
+
+### Expondo localmente com ngrok
+
+```bash
+# Terminal 1 — túnel
+ngrok http --url=SEU-DOMINIO.ngrok-free.dev 3000
+
+# Terminal 2 — app
+npm run start:dev
+```
+
+## Endpoints
+
+| Método | Rota                | Descrição                                  |
+| ------ | ------------------- | ------------------------------------------ |
+| GET    | `/health`           | Status da aplicação                        |
+| POST   | `/health/dispatch`  | Disparo manual do check-in (testes)        |
+| POST   | `/webhook/whatsapp` | Recebe respostas do Twilio (configurar lá) |
+
+## Cadastrando usuários
+
+**Opção 1 — Auto-cadastro:** basta mandar qualquer mensagem para o número do sandbox. O sistema registra automaticamente.
+
+**Opção 2 — Prisma Studio:** `npx prisma studio` → tabela `users` → Add record.
 
 ## Estrutura do projeto
 
 ```
 src/
-├── config/                  # Configurações tipadas (app, whatsapp)
+├── config/
+│   ├── app.config.ts        # Porta, cron schedules
+│   ├── whatsapp.config.ts   # Credenciais Twilio
+│   └── openai.config.ts     # API key e modelo
 ├── prisma/                  # PrismaService (global)
-├── generated/prisma/        # Client gerado automaticamente (não editar)
+├── generated/prisma/        # Client gerado (não editar)
 └── modules/
-    ├── collector/           # Busca artigos via RSS
-    │   ├── sources/         # BaseSource, RssSource
-    │   └── interfaces/      # RawNewsItem, NewsCategory
-    ├── ranking/             # Scoring e seleção top 10
-    │   └── interfaces/      # ScoredNewsItem
-    ├── summary/             # Formata e persiste o resumo diário
-    ├── notifier/            # Envio via Twilio WhatsApp
-    └── scheduler/           # Orquestra o pipeline via cron
+    ├── users/               # findByPhone, findOrCreate, findAllActive
+    ├── whatsapp/            # sendMessage via Twilio
+    ├── ai/                  # generateCheckinResponse (OpenAI + fallback estático)
+    ├── checkin/
+    │   ├── checkin.constants.ts   # DAILY_CHECK_INS, parseResponse
+    │   ├── checkin.service.ts     # dispatchMorningCheckin, processResponse
+    │   └── checkin.scheduler.ts   # Cron jobs manhã/noite
+    └── webhook/
+        ├── webhook.controller.ts  # POST /webhook/whatsapp
+        └── webhook.service.ts     # handleIncoming
 
 prisma/
-├── schema.prisma            # Modelos: NewsArticle, DailySummary, NotificationLog
-└── migrations/              # Histórico de migrações
+├── schema.prisma            # Company, User, CheckIn, AggregatedMetric, MessageLog
+└── migrations/
 ```
 
 ## Modelos do banco
 
-| Tabela              | Descrição                                 |
-| ------------------- | ----------------------------------------- |
-| `news_articles`     | Artigos coletados (upsert por URL)        |
-| `daily_summaries`   | Resumo gerado por dia (único por data)    |
-| `notification_logs` | Histórico de envios (status + SID Twilio) |
+| Tabela               | Descrição                                         |
+| -------------------- | ------------------------------------------------- |
+| `companies`          | Empresas clientes                                 |
+| `users`              | Colaboradores (token anônimo para privacidade)    |
+| `check_ins`          | Resposta diária por usuário (único por user+data) |
+| `aggregated_metrics` | Métricas anônimas por empresa/departamento        |
+| `message_logs`       | Histórico de mensagens enviadas e recebidas       |
 
 ## Scripts úteis
 
@@ -153,4 +193,5 @@ npm run build          # Build de produção
 npm run lint           # Lint + auto-fix
 npm run test           # Testes unitários
 npx prisma studio      # Interface visual do banco
+npx prisma migrate dev # Aplicar migrações
 ```
