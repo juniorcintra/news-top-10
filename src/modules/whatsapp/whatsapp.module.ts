@@ -5,4 +5,4 @@ import { WhatsappService } from './whatsapp.service';
   providers: [WhatsappService],
   exports: [WhatsappService],
 })
-export class NotifierModule {}
+export class WhatsappModule {}

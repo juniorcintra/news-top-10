@@ -14,9 +14,13 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  describe('health', () => {
+    it('should return Calmai status object', () => {
+      expect(appController.getHealth()).toEqual({
+        service: 'Calmai',
+        status: 'online',
+        version: '1.0.0',
+      });
     });
   });
 });

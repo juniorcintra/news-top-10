@@ -11,51 +11,85 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Category {
-  economy
-  business
-  politics
+enum HealthPillar {
+  humor
+  nutricao
+  fitness
+  mental
+  sono
 }
 
-enum NotifyStatus {
+enum MessageStatus {
   sent
   failed
 }
 
-model NewsArticle {
-  id             String   @id @default(uuid())
-  sourceName     String   @map("source_name") @db.VarChar(100)
-  title          String   @db.Text
-  description    String?  @db.Text
-  url            String   @unique @db.Text
-  publishedAt    DateTime @map("published_at")
-  category       Category
-  relevanceScore Float?   @map("relevance_score")
-  collectedAt    DateTime @default(now()) @map("collected_at")
+model Company {
+  id        String             @id @default(uuid())
+  name      String             @db.VarChar(255)
+  cnpj      String             @unique @db.VarChar(18)
+  status    String             @default("ativo") @db.VarChar(50)
+  createdAt DateTime           @default(now()) @map("created_at")
+  users     User[]
+  metrics   AggregatedMetric[]
 
-  @@map("news_articles")
+  @@map("companies")
 }
 
-model DailySummary {
-  id            String            @id @default(uuid())
-  summaryDate   DateTime          @unique @map("summary_date") @db.Date
-  content       String            @db.Text
-  articleIds    String[]          @map("articles_ids")
-  tokensUsed    Int               @map("tokens_used")
-  createdAt     DateTime          @default(now()) @map("created_at")
-  notifications NotificationLog[]
+model User {
+  id             String       @id @default(uuid())
+  companyId      String?      @map("company_id")
+  company        Company?     @relation(fields: [companyId], references: [id])
+  whatsappPhone  String       @unique @map("whatsapp_phone") @db.VarChar(20)
+  anonymousToken String       @unique @default(uuid()) @map("anonymous_token") @db.VarChar(255)
+  name           String?      @db.VarChar(255)
+  department     String?      @db.VarChar(100)
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  checkIns       CheckIn[]
+  messageLogs    MessageLog[]
 
-  @@map("daily_summaries")
+  @@map("users")
 }
 
-model NotificationLog {
-  id               String       @id @default(uuid())
-  summaryId        String       @map("summary_id")
-  summary          DailySummary @relation(fields: [summaryId], references: [id])
-  recipient        String       @db.VarChar(50)
-  status           NotifyStatus
-  providerResponse String?      @map("provider_response") @db.Text
-  sentAt           DateTime     @default(now()) @map("sent_at")
+model CheckIn {
+  id             String       @id @default(uuid())
+  userId         String       @map("user_id")
+  user           User         @relation(fields: [userId], references: [id])
+  date           DateTime     @map("date") @db.Date
+  pillar         HealthPillar
+  buttonResponse String?      @map("button_response") @db.VarChar(100)
+  freeText       String?      @map("free_text") @db.Text
+  scoreConverted Int?         @map("score_converted")
+  isCritical     Boolean      @default(false) @map("is_critical")
+  aiResponse     String?      @map("ai_response") @db.Text
+  createdAt      DateTime     @default(now()) @map("created_at")
 
-  @@map("notification_logs")
+  @@unique([userId, date])
+  @@map("check_ins")
+}
+
+model AggregatedMetric {
+  id                String   @id @default(uuid())
+  companyId         String   @map("company_id")
+  company           Company  @relation(fields: [companyId], references: [id])
+  department        String?  @db.VarChar(100)
+  avgWellbeingScore Decimal? @map("avg_wellbeing_score") @db.Decimal(5, 2)
+  burnoutAlert      Boolean  @default(false) @map("burnout_alert")
+  calculatedAt      DateTime @map("calculated_at") @db.Date
+
+  @@map("aggregated_metrics")
+}
+
+model MessageLog {
+  id               String        @id @default(uuid())
+  userId           String        @map("user_id")
+  user             User          @relation(fields: [userId], references: [id])
+  direction        String        @db.VarChar(10)
+  content          String        @db.Text
+  status           MessageStatus
+  providerResponse String?       @map("provider_response") @db.Text
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  @@map("message_logs")
 }

@@ -1,0 +1,131 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { AiService } from '../ai/ai.service';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { UsersService } from '../users/users.service';
+import { getCheckInForDay, parseResponse } from './checkin.constants';
+
+export interface UserContext {
+  id: string;
+  name: string | null;
+  whatsappPhone: string;
+}
+
+@Injectable()
+export class CheckinService {
+  private readonly logger = new Logger(CheckinService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly users: UsersService,
+    private readonly whatsapp: WhatsappService,
+    private readonly ai: AiService,
+  ) {}
+
+  async dispatchMorningCheckin(): Promise<void> {
+    const raw = new Date().getDay();
+    const dayOfWeek = raw === 0 || raw === 6 ? 1 : raw;
+    const checkIn = getCheckInForDay(dayOfWeek);
+
+    if (!checkIn) {
+      this.logger.log(`No check-in found for day ${dayOfWeek}.`);
+      return;
+    }
+
+    const activeUsers = await this.users.findAllActive();
+    this.logger.log(
+      `Dispatching morning check-in [${checkIn.pillar}] to ${activeUsers.length} user(s).`,
+    );
+
+    for (const user of activeUsers) {
+      const message = checkIn.message.replace('{nome}', user.name ?? 'você');
+      await this.whatsapp.sendMessage(user.id, user.whatsappPhone, message);
+    }
+  }
+
+  async processResponse(user: UserContext, body: string): Promise<void> {
+    const dayOfWeek = new Date().getDay();
+    const checkIn = getCheckInForDay(dayOfWeek);
+
+    if (!checkIn) {
+      await this.whatsapp.sendMessage(
+        user.id,
+        user.whatsappPhone,
+        'Hoje não temos check-in agendado. Até os próximos dias! 😊',
+      );
+      return;
+    }
+
+    const option = parseResponse(body, checkIn.options);
+
+    if (!option) {
+      const list = checkIn.options
+        .map((o) => `${o.number}️⃣ ${o.emoji} ${o.label}`)
+        .join('\n');
+      await this.whatsapp.sendMessage(
+        user.id,
+        user.whatsappPhone,
+        `Por favor, responda com o número da opção:\n\n${list}`,
+      );
+      return;
+    }
+
+    const consecutiveCritical = await this.countConsecutiveCriticalDays(
+      user.id,
+    );
+    const criticalCount = option.isCritical ? consecutiveCritical + 1 : 0;
+
+    const aiResponse = await this.ai.generateCheckinResponse(
+      user.name,
+      checkIn.pillar,
+      option,
+      criticalCount,
+    );
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    await this.prisma.checkIn.upsert({
+      where: { userId_date: { userId: user.id, date: today } },
+      update: {
+        buttonResponse: `${option.number} - ${option.emoji} ${option.label}`,
+        scoreConverted: option.score,
+        isCritical: option.isCritical,
+        aiResponse,
+      },
+      create: {
+        userId: user.id,
+        date: today,
+        pillar: checkIn.pillar,
+        buttonResponse: `${option.number} - ${option.emoji} ${option.label}`,
+        scoreConverted: option.score,
+        isCritical: option.isCritical,
+        aiResponse,
+      },
+    });
+
+    await this.whatsapp.sendMessage(user.id, user.whatsappPhone, aiResponse);
+
+    this.logger.log(
+      `Check-in saved: user=${user.whatsappPhone} pillar=${checkIn.pillar} score=${option.score} critical=${option.isCritical}`,
+    );
+  }
+
+  private async countConsecutiveCriticalDays(userId: string): Promise<number> {
+    const recent = await this.prisma.checkIn.findMany({
+      where: { userId },
+      orderBy: { date: 'desc' },
+      take: 7,
+    });
+
+    let count = 0;
+    for (const ci of recent) {
+      if (ci.isCritical) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    return count;
+  }
+}
