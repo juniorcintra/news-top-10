@@ -25,7 +25,7 @@ export class CheckinScheduler implements OnModuleInit {
     });
 
     const eveningJob = new CronJob(eveningCron, () => {
-      this.logger.log('Evening slot reached — no dispatch configured yet.');
+      void this.checkin.dispatchEveningCheckin();
     });
 
     this.schedulerRegistry.addCronJob('calmai-morning', morningJob);

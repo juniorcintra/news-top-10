@@ -203,8 +203,222 @@ export const DAILY_CHECK_INS: DailyCheckIn[] = [
   },
 ];
 
+export const EVENING_CHECK_INS: DailyCheckIn[] = [
+  {
+    dayOfWeek: 1,
+    pillar: 'humor',
+    message:
+      'Boa noite, {nome}! 🌙 Como encerrou o dia de hoje em termos de humor e energia?\n\n' +
+      '1️⃣ 😊 Melhor que o esperado\n' +
+      '2️⃣ 😐 Igual ao início do dia\n' +
+      '3️⃣ 😔 Acabou mais cansado\n' +
+      '4️⃣ 😤 Frustrado/Irritado\n\n' +
+      '_Responda com o número da opção._',
+    options: [
+      {
+        number: 1,
+        emoji: '😊',
+        label: 'Melhor que o esperado',
+        score: 5,
+        isCritical: false,
+      },
+      {
+        number: 2,
+        emoji: '😐',
+        label: 'Igual ao início do dia',
+        score: 3,
+        isCritical: false,
+      },
+      {
+        number: 3,
+        emoji: '😔',
+        label: 'Acabou mais cansado',
+        score: 2,
+        isCritical: false,
+      },
+      {
+        number: 4,
+        emoji: '😤',
+        label: 'Frustrado/Irritado',
+        score: 1,
+        isCritical: true,
+      },
+    ],
+  },
+  {
+    dayOfWeek: 2,
+    pillar: 'nutricao',
+    message:
+      'Boa noite, {nome}! 🥦 Como foi a sua alimentação e hidratação hoje?\n\n' +
+      '1️⃣ 💚 Comi bem e me hidratei\n' +
+      '2️⃣ ⚖️ Razoável, poderia melhorar\n' +
+      '3️⃣ 🍟 Comi mal e esqueci a água\n' +
+      '4️⃣ 😰 Pulei refeições por estresse\n\n' +
+      '_Responda com o número da opção._',
+    options: [
+      {
+        number: 1,
+        emoji: '💚',
+        label: 'Comi bem e me hidratei',
+        score: 5,
+        isCritical: false,
+      },
+      {
+        number: 2,
+        emoji: '⚖️',
+        label: 'Razoável, poderia melhorar',
+        score: 3,
+        isCritical: false,
+      },
+      {
+        number: 3,
+        emoji: '🍟',
+        label: 'Comi mal e esqueci a água',
+        score: 2,
+        isCritical: false,
+      },
+      {
+        number: 4,
+        emoji: '😰',
+        label: 'Pulei refeições por estresse',
+        score: 1,
+        isCritical: true,
+      },
+    ],
+  },
+  {
+    dayOfWeek: 3,
+    pillar: 'fitness',
+    message:
+      'Boa noite, {nome}! 🌃 Você conseguiu se movimentar hoje?\n\n' +
+      '1️⃣ 🏋️ Sim, treinei\n' +
+      '2️⃣ 🚶 Uma caminhada curta\n' +
+      '3️⃣ 🛋️ Fiquei parado o dia todo\n' +
+      '4️⃣ 🤕 Não consegui por dor/cansaço extremo\n\n' +
+      '_Responda com o número da opção._',
+    options: [
+      {
+        number: 1,
+        emoji: '🏋️',
+        label: 'Sim, treinei',
+        score: 5,
+        isCritical: false,
+      },
+      {
+        number: 2,
+        emoji: '🚶',
+        label: 'Uma caminhada curta',
+        score: 3,
+        isCritical: false,
+      },
+      {
+        number: 3,
+        emoji: '🛋️',
+        label: 'Fiquei parado o dia todo',
+        score: 2,
+        isCritical: false,
+      },
+      {
+        number: 4,
+        emoji: '🤕',
+        label: 'Não consegui por dor/cansaço extremo',
+        score: 1,
+        isCritical: true,
+      },
+    ],
+  },
+  {
+    dayOfWeek: 4,
+    pillar: 'mental',
+    message:
+      'Boa noite, {nome}. 🧘 Ao final do dia, como está sua mente?\n\n' +
+      '1️⃣ 🔵 Tranquilo e satisfeito\n' +
+      '2️⃣ 🟡 Um pouco sobrecarregado\n' +
+      '3️⃣ 🔴 Exausto/Sem conseguir desligar\n' +
+      '4️⃣ 😶 Entorpecido/Sem sentir nada\n\n' +
+      '_Responda com o número da opção._',
+    options: [
+      {
+        number: 1,
+        emoji: '🔵',
+        label: 'Tranquilo e satisfeito',
+        score: 5,
+        isCritical: false,
+      },
+      {
+        number: 2,
+        emoji: '🟡',
+        label: 'Um pouco sobrecarregado',
+        score: 2,
+        isCritical: false,
+      },
+      {
+        number: 3,
+        emoji: '🔴',
+        label: 'Exausto/Sem conseguir desligar',
+        score: 1,
+        isCritical: true,
+      },
+      {
+        number: 4,
+        emoji: '😶',
+        label: 'Entorpecido/Sem sentir nada',
+        score: 1,
+        isCritical: true,
+      },
+    ],
+  },
+  {
+    dayOfWeek: 5,
+    pillar: 'sono',
+    message:
+      'Boa noite, {nome}! 🌛 Antes de dormir: qual é a sua expectativa para essa noite?\n\n' +
+      '1️⃣ 😴 Estou com sono, vou dormir bem\n' +
+      '2️⃣ 💭 Mente agitada, pode ser difícil\n' +
+      '3️⃣ 😟 Tenho ansiedade sobre amanhã\n' +
+      '4️⃣ 🥱 Exausto mas sei que vou acordar cansado\n\n' +
+      '_Responda com o número da opção._',
+    options: [
+      {
+        number: 1,
+        emoji: '😴',
+        label: 'Estou com sono, vou dormir bem',
+        score: 5,
+        isCritical: false,
+      },
+      {
+        number: 2,
+        emoji: '💭',
+        label: 'Mente agitada, pode ser difícil',
+        score: 2,
+        isCritical: false,
+      },
+      {
+        number: 3,
+        emoji: '😟',
+        label: 'Tenho ansiedade sobre amanhã',
+        score: 1,
+        isCritical: true,
+      },
+      {
+        number: 4,
+        emoji: '🥱',
+        label: 'Exausto mas sei que vou acordar cansado',
+        score: 2,
+        isCritical: false,
+      },
+    ],
+  },
+];
+
 export function getCheckInForDay(dayOfWeek: number): DailyCheckIn | null {
   return DAILY_CHECK_INS.find((c) => c.dayOfWeek === dayOfWeek) ?? null;
+}
+
+export function getEveningCheckInForDay(
+  dayOfWeek: number,
+): DailyCheckIn | null {
+  return EVENING_CHECK_INS.find((c) => c.dayOfWeek === dayOfWeek) ?? null;
 }
 
 export function parseResponse(

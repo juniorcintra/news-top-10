@@ -117,6 +117,43 @@ export class AiService {
     }
   }
 
+  async handleFreeText(
+    userName: string | null,
+    message: string,
+  ): Promise<string> {
+    const name = userName ?? 'você';
+
+    if (!this.openai) {
+      return (
+        `Obrigado por compartilhar, ${name}. ` +
+        'Estou aqui sempre que precisar desabafar. 💙'
+      );
+    }
+
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: this.model,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          {
+            role: 'user',
+            content: `${name} enviou a seguinte mensagem fora do check-in: "${message}". Responda de forma acolhedora e breve.`,
+          },
+        ],
+        max_tokens: 120,
+        temperature: 0.8,
+      });
+
+      return (
+        completion.choices[0]?.message?.content?.trim() ??
+        `Obrigado por compartilhar, ${name}. Estou aqui. 💙`
+      );
+    } catch (error) {
+      this.logger.error(`OpenAI free-text error: ${(error as Error).message}`);
+      return `Obrigado por compartilhar, ${name}. Estou aqui sempre que precisar. 💙`;
+    }
+  }
+
   private staticResponse(
     pillar: string,
     option: CheckInOption,

@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { CheckinModule } from './modules/checkin/checkin.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import appConfig from './config/app.config';
 import whatsappConfig from './config/whatsapp.config';
 import openaiConfig from './config/openai.config';
@@ -21,6 +22,7 @@ import openaiConfig from './config/openai.config';
     PrismaModule,
     CheckinModule,
     WebhookModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
