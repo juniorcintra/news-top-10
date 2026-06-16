@@ -8,34 +8,49 @@ Chatbot de **check-in diário de bem-estar** para empreendedores e colaboradores
 Cron 08:30 (seg–sex)
     └── CheckinService.dispatchMorningCheckin()
         └── Busca todos os usuários ativos no banco
-        └── Envia mensagem do dia via Twilio WhatsApp
+        └── Envia pergunta do pilar do dia via Twilio WhatsApp
 
-Usuário responde "1", "2", "3" ou "4"
-    └── POST /webhook/whatsapp  (Twilio → ngrok → app)
+Cron 20:30 (seg–sex)
+    └── CheckinService.dispatchEveningCheckin()
+        └── Envia pergunta reflexiva de encerramento do dia
+
+Usuário responde
+    └── POST /webhook/whatsapp  (Twilio → ngrok/domínio → app)
         └── WebhookService.handleIncoming()
-            └── findOrCreate(phone)          → auto-cadastro
-            └── CheckinService.processResponse()
-                └── parseResponse()          → identifica opção
-                └── AiService.generateCheckinResponse()  → resposta empática
-                └── Salva CheckIn no banco   → score + isCritical
-                └── Envia resposta ao usuário
+            ├── findOrCreate(phone)               → auto-cadastro
+            ├── Número 1–4 ou label reconhecível:
+            │     ├── Antes das 17h  → processResponse()          (manhã)
+            │     └── A partir das 17h → processEveningResponse() (noite)
+            └── Texto livre → AiService.handleFreeText()          (conversacional)
+                  └── parseResponse()             → identifica opção
+                  └── AiService.generateCheckinResponse() → resposta empática
+                  └── Salva CheckIn (score + isCritical)
+                  └── Envia resposta ao usuário
 ```
 
 ### Pilares de bem-estar por dia
 
-| Dia     | Pilar    | Tema                         |
-| ------- | -------- | ---------------------------- |
-| Segunda | Humor    | Energia e foco para a semana |
-| Terça   | Nutrição | Alimentação e hidratação     |
-| Quarta  | Fitness  | Movimento e exercício        |
-| Quinta  | Mental   | Carga de trabalho / burnout  |
-| Sexta   | Sono     | Qualidade do descanso        |
+| Dia     | Pilar    | Manhã (08:30)                | Noite (20:30)                 |
+| ------- | -------- | ---------------------------- | ----------------------------- |
+| Segunda | Humor    | Energia e foco para a semana | Como encerrou o dia de humor  |
+| Terça   | Nutrição | Alimentação e hidratação     | Como foi a alimentação hoje   |
+| Quarta  | Fitness  | Movimento nos últimos dias   | Conseguiu se movimentar hoje  |
+| Quinta  | Mental   | Carga de trabalho / burnout  | Estado mental ao final do dia |
+| Sexta   | Sono     | Noites de sono da semana     | Expectativa para essa noite   |
+
+### Roteamento inteligente de mensagens
+
+| Mensagem recebida             | Ação                                      |
+| ----------------------------- | ----------------------------------------- |
+| `"1"`, `"2"`, `"3"`, `"4"`    | Check-in matinal ou noturno (por horário) |
+| Label reconhecível da opção   | Idem — aceita "Ansioso", "Burnout", etc.  |
+| Texto livre ("Estou cansado") | Roteado para IA conversacional            |
 
 ### Escalada crítica
 
 - Respostas com score ≤ 1 são marcadas como `isCritical = true`
 - A partir de **3 dias consecutivos críticos**, a IA aciona mensagem de suporte confidencial
-- Todos os dados são anonimizados no modelo `AggregatedMetric` para dashboards corporativos
+- Dashboard corporativo consulta **apenas métricas agregadas** — nunca dados individuais
 
 ## Stack
 
@@ -136,11 +151,13 @@ npm run start:dev
 
 ## Endpoints
 
-| Método | Rota                | Descrição                                  |
-| ------ | ------------------- | ------------------------------------------ |
-| GET    | `/health`           | Status da aplicação                        |
-| POST   | `/health/dispatch`  | Disparo manual do check-in (testes)        |
-| POST   | `/webhook/whatsapp` | Recebe respostas do Twilio (configurar lá) |
+| Método | Rota                                      | Descrição                                   |
+| ------ | ----------------------------------------- | ------------------------------------------- |
+| GET    | `/health`                                 | Status da aplicação                         |
+| POST   | `/health/dispatch`                        | Disparo manual do check-in matinal (testes) |
+| POST   | `/webhook/whatsapp`                       | Recebe respostas do Twilio                  |
+| GET    | `/dashboard/companies/:id/metrics?days=7` | Métricas agregadas da empresa (anônimas)    |
+| GET    | `/dashboard/companies/:id/burnout-risk`   | % de colaboradores com 3+ dias críticos     |
 
 ## Cadastrando usuários
 
@@ -161,14 +178,17 @@ src/
 └── modules/
     ├── users/               # findByPhone, findOrCreate, findAllActive
     ├── whatsapp/            # sendMessage via Twilio
-    ├── ai/                  # generateCheckinResponse (OpenAI + fallback estático)
+    ├── ai/                  # generateCheckinResponse, handleFreeText (OpenAI + fallback)
     ├── checkin/
-    │   ├── checkin.constants.ts   # DAILY_CHECK_INS, parseResponse
-    │   ├── checkin.service.ts     # dispatchMorningCheckin, processResponse
-    │   └── checkin.scheduler.ts   # Cron jobs manhã/noite
-    └── webhook/
-        ├── webhook.controller.ts  # POST /webhook/whatsapp
-        └── webhook.service.ts     # handleIncoming
+    │   ├── checkin.constants.ts   # DAILY_CHECK_INS, EVENING_CHECK_INS, parseResponse
+    │   ├── checkin.service.ts     # dispatchMorning/Evening, processResponse/Evening
+    │   └── checkin.scheduler.ts   # Cron 08:30 + 20:30
+    ├── webhook/
+    │   ├── webhook.controller.ts  # POST /webhook/whatsapp
+    │   └── webhook.service.ts     # handleIncoming (roteia botão / texto livre)
+    └── dashboard/
+        ├── dashboard.controller.ts  # GET /dashboard/companies/:id/...
+        └── dashboard.service.ts     # getCompanyMetrics, getBurnoutRisk
 
 prisma/
 ├── schema.prisma            # Company, User, CheckIn, AggregatedMetric, MessageLog
