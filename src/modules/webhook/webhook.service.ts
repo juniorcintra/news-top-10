@@ -50,6 +50,27 @@ export class WebhookService {
       },
     });
 
+    if (user.name === null) {
+      await this.users.updateName(user.id, 'PENDING');
+      await this.whatsapp.sendMessage(
+        user.id,
+        user.whatsappPhone,
+        'Olá! Sou a Calmai 💙\n\nEstou aqui para acompanhar o seu bem-estar diariamente.\n\nPrimeiro, qual é o seu nome?',
+      );
+      return;
+    }
+
+    if (user.name === 'PENDING') {
+      const nome = body.trim().split(' ')[0] ?? body.trim();
+      await this.users.updateName(user.id, nome);
+      await this.whatsapp.sendMessage(
+        user.id,
+        user.whatsappPhone,
+        `Prazer, ${nome}! 😊 A partir de agora vou te enviar check-ins todas as manhãs (08:30) e noites (20:30) de seg a sex.\n\nCuide-se! 💙`,
+      );
+      return;
+    }
+
     const isButtonReply = BUTTON_PATTERN.test(body);
 
     if (isButtonReply) {
