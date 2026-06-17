@@ -47,6 +47,24 @@ export class CheckinService {
     }
   }
 
+  async dispatchMorningCheckinToUser(user: UserContext): Promise<void> {
+    const raw = new Date().getDay();
+    const dayOfWeek = raw === 0 || raw === 6 ? 1 : raw;
+    const checkIn = getCheckInForDay(dayOfWeek);
+    if (!checkIn) return;
+    const message = checkIn.message.replace('{nome}', user.name ?? 'você');
+    await this.whatsapp.sendMessage(user.id, user.whatsappPhone, message);
+  }
+
+  async dispatchEveningCheckinToUser(user: UserContext): Promise<void> {
+    const raw = new Date().getDay();
+    const dayOfWeek = raw === 0 || raw === 6 ? 5 : raw;
+    const checkIn = getEveningCheckInForDay(dayOfWeek);
+    if (!checkIn) return;
+    const message = checkIn.message.replace('{nome}', user.name ?? 'você');
+    await this.whatsapp.sendMessage(user.id, user.whatsappPhone, message);
+  }
+
   async dispatchEveningCheckin(): Promise<void> {
     const raw = new Date().getDay();
     const dayOfWeek = raw === 0 || raw === 6 ? 5 : raw;
