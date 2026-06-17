@@ -45,6 +45,16 @@ export class CheckinService {
       const message = checkIn.message.replace('{nome}', user.name ?? 'você');
       await this.whatsapp.sendMessage(user.id, user.whatsappPhone, message);
     }
+
+    const newUsers = await this.users.findAllPendingOnboarding();
+    for (const user of newUsers) {
+      await this.users.updateName(user.id, 'PENDING');
+      await this.whatsapp.sendMessage(
+        user.id,
+        user.whatsappPhone,
+        'Olá! Eu sou a Calmai 💙\n\nEstou aqui para acompanhar o seu bem-estar diariamente, com check-ins rápidos de manhã (08:30) e à noite (20:30).\n\nQual é o seu nome?',
+      );
+    }
   }
 
   async dispatchMorningCheckinToUser(user: UserContext): Promise<void> {

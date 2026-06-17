@@ -29,6 +29,12 @@ export class UsersService {
     });
   }
 
+  findAllPendingOnboarding() {
+    return this.prisma.user.findMany({
+      where: { active: true, name: null },
+    });
+  }
+
   updateName(id: string, name: string) {
     return this.prisma.user.update({ where: { id }, data: { name } });
   }
