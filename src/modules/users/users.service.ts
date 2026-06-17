@@ -20,7 +20,13 @@ export class UsersService {
   }
 
   findAllActive() {
-    return this.prisma.user.findMany({ where: { active: true } });
+    return this.prisma.user.findMany({
+      where: {
+        active: true,
+        name: { not: null },
+        NOT: { name: 'PENDING' },
+      },
+    });
   }
 
   updateName(id: string, name: string) {
