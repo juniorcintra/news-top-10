@@ -8,7 +8,11 @@ import {
   getEveningCheckInForDay,
   parseResponse,
 } from './checkin.constants';
-import { ConvState, getFollowUp } from './checkin.followup';
+import {
+  ConvState,
+  getCriticalFollowUp2,
+  getFollowUp,
+} from './checkin.followup';
 
 export interface UserContext {
   id: string;
@@ -199,17 +203,61 @@ export class CheckinService {
     }
 
     const optionNumber = parseInt(body.trim(), 10);
+
+    if (state.step === 'followup_2') {
+      const criticalQ = getCriticalFollowUp2(state.pillar);
+      const followUp2Label =
+        criticalQ.options.find((o) => o.number === optionNumber)?.label ??
+        body.trim();
+
+      const aiResponse = await this.ai.generateFollowUpResponse(
+        user.name,
+        state.pillar,
+        state.initialLabel,
+        state.followUp1Label ?? '',
+        followUp2Label,
+        state.isCritical,
+        state.consecutiveCritical,
+      );
+
+      await this.whatsapp.sendMessage(user.id, user.whatsappPhone, aiResponse);
+      await this.users.clearConversationState(user.id);
+
+      this.logger.log(
+        `Critical follow-up 2 processed: user=${user.whatsappPhone} pillar=${state.pillar}`,
+      );
+      return;
+    }
+
     const followUp = getFollowUp(state.pillar, state.initialOptionNumber);
-    const followUpLabel =
+    const followUp1Label =
       followUp?.options.find((o) => o.number === optionNumber)?.label ??
       body.trim();
+
+    if (state.isCritical) {
+      const criticalQ = getCriticalFollowUp2(state.pillar);
+      await this.whatsapp.sendMessage(
+        user.id,
+        user.whatsappPhone,
+        criticalQ.question,
+      );
+      await this.users.setConversationState(user.id, {
+        ...state,
+        step: 'followup_2',
+        followUp1Label,
+      });
+      this.logger.log(
+        `Critical follow-up 2 queued: user=${user.whatsappPhone} pillar=${state.pillar}`,
+      );
+      return;
+    }
 
     const aiResponse = await this.ai.generateFollowUpResponse(
       user.name,
       state.pillar,
       state.initialLabel,
       followUp?.question ?? '',
-      followUpLabel,
+      followUp1Label,
       state.isCritical,
       state.consecutiveCritical,
     );
@@ -218,7 +266,7 @@ export class CheckinService {
     await this.users.clearConversationState(user.id);
 
     this.logger.log(
-      `Follow-up processed: user=${user.whatsappPhone} pillar=${state.pillar} followUp=${followUpLabel}`,
+      `Follow-up processed: user=${user.whatsappPhone} pillar=${state.pillar} followUp=${followUp1Label}`,
     );
   }
 

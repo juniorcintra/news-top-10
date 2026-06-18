@@ -12,12 +12,75 @@ export interface FollowUpStep {
 }
 
 export interface ConvState {
-  step: 'followup_1';
+  step: 'followup_1' | 'followup_2';
   pillar: HealthPillar;
   initialOptionNumber: number;
   initialLabel: string;
   isCritical: boolean;
   consecutiveCritical: number;
+  followUp1Label?: string;
+}
+
+export interface CriticalFollowUp2 {
+  question: string;
+  options: FollowUpOption[];
+}
+
+export const CRITICAL_FOLLOWUP_2: Record<HealthPillar, CriticalFollowUp2> = {
+  humor: {
+    question:
+      'Você tem conseguido falar sobre como está se sentindo com alguém de confiança?\n\n1️⃣ Sim, tenho bom apoio\n2️⃣ Às vezes\n3️⃣ Prefiro guardar para mim\n4️⃣ Me sinto sozinho(a)',
+    options: [
+      { number: 1, label: 'Tenho bom apoio' },
+      { number: 2, label: 'Às vezes' },
+      { number: 3, label: 'Prefiro guardar para mim' },
+      { number: 4, label: 'Me sinto sozinho(a)' },
+    ],
+  },
+  nutricao: {
+    question:
+      'Você tem alguém que te apoia nas suas escolhas de saúde?\n\n1️⃣ Sim, família ou amigos\n2️⃣ Às vezes\n3️⃣ Faço tudo sozinho(a)\n4️⃣ Não tenho apoio',
+    options: [
+      { number: 1, label: 'Sim, família ou amigos' },
+      { number: 2, label: 'Às vezes' },
+      { number: 3, label: 'Faço tudo sozinho(a)' },
+      { number: 4, label: 'Não tenho apoio' },
+    ],
+  },
+  fitness: {
+    question:
+      'Você tem sentido que seu corpo está pedindo descanso?\n\n1️⃣ Não, estou bem\n2️⃣ Um pouco\n3️⃣ Sim, bastante\n4️⃣ Tenho dores ou lesões',
+    options: [
+      { number: 1, label: 'Não, estou bem' },
+      { number: 2, label: 'Um pouco' },
+      { number: 3, label: 'Sim, bastante' },
+      { number: 4, label: 'Tenho dores ou lesões' },
+    ],
+  },
+  mental: {
+    question:
+      'Você tem conseguido falar sobre essa pressão com alguém?\n\n1️⃣ Sim, tenho bom apoio\n2️⃣ Às vezes\n3️⃣ Prefiro não falar\n4️⃣ Me sinto sozinho(a)',
+    options: [
+      { number: 1, label: 'Tenho bom apoio' },
+      { number: 2, label: 'Às vezes' },
+      { number: 3, label: 'Prefiro não falar' },
+      { number: 4, label: 'Me sinto sozinho(a)' },
+    ],
+  },
+  sono: {
+    question:
+      'Você já chegou a conversar com um médico sobre seu sono?\n\n1️⃣ Sim, estou em tratamento\n2️⃣ Ainda não, mas quero\n3️⃣ Não acho necessário\n4️⃣ Não tenho acesso',
+    options: [
+      { number: 1, label: 'Sim, em tratamento' },
+      { number: 2, label: 'Ainda não, mas quero' },
+      { number: 3, label: 'Não acho necessário' },
+      { number: 4, label: 'Não tenho acesso' },
+    ],
+  },
+};
+
+export function getCriticalFollowUp2(pillar: HealthPillar): CriticalFollowUp2 {
+  return CRITICAL_FOLLOWUP_2[pillar];
 }
 
 export interface FollowUpTree {
