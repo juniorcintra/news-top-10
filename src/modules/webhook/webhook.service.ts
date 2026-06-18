@@ -39,6 +39,7 @@ export class WebhookService {
       id: user.id,
       name: user.name ?? null,
       whatsappPhone: user.whatsappPhone,
+      conversationState: user.conversationState ?? null,
     };
 
     await this.prisma.messageLog.create({
@@ -76,6 +77,11 @@ export class WebhookService {
       } else {
         await this.checkin.dispatchMorningCheckinToUser(updatedCtx);
       }
+      return;
+    }
+
+    if (userCtx.conversationState) {
+      await this.checkin.processFollowUp(userCtx, body);
       return;
     }
 

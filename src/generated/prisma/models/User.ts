@@ -32,6 +32,7 @@ export type UserMinAggregateOutputType = {
   name: string | null
   department: string | null
   active: boolean | null
+  conversationState: string | null
   createdAt: Date | null
 }
 
@@ -43,6 +44,7 @@ export type UserMaxAggregateOutputType = {
   name: string | null
   department: string | null
   active: boolean | null
+  conversationState: string | null
   createdAt: Date | null
 }
 
@@ -54,6 +56,7 @@ export type UserCountAggregateOutputType = {
   name: number
   department: number
   active: number
+  conversationState: number
   createdAt: number
   _all: number
 }
@@ -67,6 +70,7 @@ export type UserMinAggregateInputType = {
   name?: true
   department?: true
   active?: true
+  conversationState?: true
   createdAt?: true
 }
 
@@ -78,6 +82,7 @@ export type UserMaxAggregateInputType = {
   name?: true
   department?: true
   active?: true
+  conversationState?: true
   createdAt?: true
 }
 
@@ -89,6 +94,7 @@ export type UserCountAggregateInputType = {
   name?: true
   department?: true
   active?: true
+  conversationState?: true
   createdAt?: true
   _all?: true
 }
@@ -173,6 +179,7 @@ export type UserGroupByOutputType = {
   name: string | null
   department: string | null
   active: boolean
+  conversationState: string | null
   createdAt: Date
   _count: UserCountAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
@@ -205,6 +212,7 @@ export type UserWhereInput = {
   name?: Prisma.StringNullableFilter<"User"> | string | null
   department?: Prisma.StringNullableFilter<"User"> | string | null
   active?: Prisma.BoolFilter<"User"> | boolean
+  conversationState?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   company?: Prisma.XOR<Prisma.CompanyNullableScalarRelationFilter, Prisma.CompanyWhereInput> | null
   checkIns?: Prisma.CheckInListRelationFilter
@@ -219,6 +227,7 @@ export type UserOrderByWithRelationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   department?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
+  conversationState?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   company?: Prisma.CompanyOrderByWithRelationInput
   checkIns?: Prisma.CheckInOrderByRelationAggregateInput
@@ -236,6 +245,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringNullableFilter<"User"> | string | null
   department?: Prisma.StringNullableFilter<"User"> | string | null
   active?: Prisma.BoolFilter<"User"> | boolean
+  conversationState?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   company?: Prisma.XOR<Prisma.CompanyNullableScalarRelationFilter, Prisma.CompanyWhereInput> | null
   checkIns?: Prisma.CheckInListRelationFilter
@@ -250,6 +260,7 @@ export type UserOrderByWithAggregationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   department?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
+  conversationState?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
@@ -267,6 +278,7 @@ export type UserScalarWhereWithAggregatesInput = {
   name?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   department?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   active?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  conversationState?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
 
@@ -277,6 +289,7 @@ export type UserCreateInput = {
   name?: string | null
   department?: string | null
   active?: boolean
+  conversationState?: string | null
   createdAt?: Date | string
   company?: Prisma.CompanyCreateNestedOneWithoutUsersInput
   checkIns?: Prisma.CheckInCreateNestedManyWithoutUserInput
@@ -291,6 +304,7 @@ export type UserUncheckedCreateInput = {
   name?: string | null
   department?: string | null
   active?: boolean
+  conversationState?: string | null
   createdAt?: Date | string
   checkIns?: Prisma.CheckInUncheckedCreateNestedManyWithoutUserInput
   messageLogs?: Prisma.MessageLogUncheckedCreateNestedManyWithoutUserInput
@@ -303,6 +317,7 @@ export type UserUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   company?: Prisma.CompanyUpdateOneWithoutUsersNestedInput
   checkIns?: Prisma.CheckInUpdateManyWithoutUserNestedInput
@@ -317,6 +332,7 @@ export type UserUncheckedUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   checkIns?: Prisma.CheckInUncheckedUpdateManyWithoutUserNestedInput
   messageLogs?: Prisma.MessageLogUncheckedUpdateManyWithoutUserNestedInput
@@ -330,6 +346,7 @@ export type UserCreateManyInput = {
   name?: string | null
   department?: string | null
   active?: boolean
+  conversationState?: string | null
   createdAt?: Date | string
 }
 
@@ -340,6 +357,7 @@ export type UserUpdateManyMutationInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -351,6 +369,7 @@ export type UserUncheckedUpdateManyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -372,6 +391,7 @@ export type UserCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   department?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  conversationState?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -383,6 +403,7 @@ export type UserMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   department?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  conversationState?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -394,6 +415,7 @@ export type UserMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   department?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  conversationState?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -487,6 +509,7 @@ export type UserCreateWithoutCompanyInput = {
   name?: string | null
   department?: string | null
   active?: boolean
+  conversationState?: string | null
   createdAt?: Date | string
   checkIns?: Prisma.CheckInCreateNestedManyWithoutUserInput
   messageLogs?: Prisma.MessageLogCreateNestedManyWithoutUserInput
@@ -499,6 +522,7 @@ export type UserUncheckedCreateWithoutCompanyInput = {
   name?: string | null
   department?: string | null
   active?: boolean
+  conversationState?: string | null
   createdAt?: Date | string
   checkIns?: Prisma.CheckInUncheckedCreateNestedManyWithoutUserInput
   messageLogs?: Prisma.MessageLogUncheckedCreateNestedManyWithoutUserInput
@@ -541,6 +565,7 @@ export type UserScalarWhereInput = {
   name?: Prisma.StringNullableFilter<"User"> | string | null
   department?: Prisma.StringNullableFilter<"User"> | string | null
   active?: Prisma.BoolFilter<"User"> | boolean
+  conversationState?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
 }
 
@@ -551,6 +576,7 @@ export type UserCreateWithoutCheckInsInput = {
   name?: string | null
   department?: string | null
   active?: boolean
+  conversationState?: string | null
   createdAt?: Date | string
   company?: Prisma.CompanyCreateNestedOneWithoutUsersInput
   messageLogs?: Prisma.MessageLogCreateNestedManyWithoutUserInput
@@ -564,6 +590,7 @@ export type UserUncheckedCreateWithoutCheckInsInput = {
   name?: string | null
   department?: string | null
   active?: boolean
+  conversationState?: string | null
   createdAt?: Date | string
   messageLogs?: Prisma.MessageLogUncheckedCreateNestedManyWithoutUserInput
 }
@@ -591,6 +618,7 @@ export type UserUpdateWithoutCheckInsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   company?: Prisma.CompanyUpdateOneWithoutUsersNestedInput
   messageLogs?: Prisma.MessageLogUpdateManyWithoutUserNestedInput
@@ -604,6 +632,7 @@ export type UserUncheckedUpdateWithoutCheckInsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   messageLogs?: Prisma.MessageLogUncheckedUpdateManyWithoutUserNestedInput
 }
@@ -615,6 +644,7 @@ export type UserCreateWithoutMessageLogsInput = {
   name?: string | null
   department?: string | null
   active?: boolean
+  conversationState?: string | null
   createdAt?: Date | string
   company?: Prisma.CompanyCreateNestedOneWithoutUsersInput
   checkIns?: Prisma.CheckInCreateNestedManyWithoutUserInput
@@ -628,6 +658,7 @@ export type UserUncheckedCreateWithoutMessageLogsInput = {
   name?: string | null
   department?: string | null
   active?: boolean
+  conversationState?: string | null
   createdAt?: Date | string
   checkIns?: Prisma.CheckInUncheckedCreateNestedManyWithoutUserInput
 }
@@ -655,6 +686,7 @@ export type UserUpdateWithoutMessageLogsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   company?: Prisma.CompanyUpdateOneWithoutUsersNestedInput
   checkIns?: Prisma.CheckInUpdateManyWithoutUserNestedInput
@@ -668,6 +700,7 @@ export type UserUncheckedUpdateWithoutMessageLogsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   checkIns?: Prisma.CheckInUncheckedUpdateManyWithoutUserNestedInput
 }
@@ -679,6 +712,7 @@ export type UserCreateManyCompanyInput = {
   name?: string | null
   department?: string | null
   active?: boolean
+  conversationState?: string | null
   createdAt?: Date | string
 }
 
@@ -689,6 +723,7 @@ export type UserUpdateWithoutCompanyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   checkIns?: Prisma.CheckInUpdateManyWithoutUserNestedInput
   messageLogs?: Prisma.MessageLogUpdateManyWithoutUserNestedInput
@@ -701,6 +736,7 @@ export type UserUncheckedUpdateWithoutCompanyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   checkIns?: Prisma.CheckInUncheckedUpdateManyWithoutUserNestedInput
   messageLogs?: Prisma.MessageLogUncheckedUpdateManyWithoutUserNestedInput
@@ -713,6 +749,7 @@ export type UserUncheckedUpdateManyWithoutCompanyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  conversationState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -764,6 +801,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   name?: boolean
   department?: boolean
   active?: boolean
+  conversationState?: boolean
   createdAt?: boolean
   company?: boolean | Prisma.User$companyArgs<ExtArgs>
   checkIns?: boolean | Prisma.User$checkInsArgs<ExtArgs>
@@ -779,6 +817,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   department?: boolean
   active?: boolean
+  conversationState?: boolean
   createdAt?: boolean
   company?: boolean | Prisma.User$companyArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
@@ -791,6 +830,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   department?: boolean
   active?: boolean
+  conversationState?: boolean
   createdAt?: boolean
   company?: boolean | Prisma.User$companyArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
@@ -803,10 +843,11 @@ export type UserSelectScalar = {
   name?: boolean
   department?: boolean
   active?: boolean
+  conversationState?: boolean
   createdAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "companyId" | "whatsappPhone" | "anonymousToken" | "name" | "department" | "active" | "createdAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "companyId" | "whatsappPhone" | "anonymousToken" | "name" | "department" | "active" | "conversationState" | "createdAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   company?: boolean | Prisma.User$companyArgs<ExtArgs>
   checkIns?: boolean | Prisma.User$checkInsArgs<ExtArgs>
@@ -835,6 +876,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string | null
     department: string | null
     active: boolean
+    conversationState: string | null
     createdAt: Date
   }, ExtArgs["result"]["user"]>
   composites: {}
@@ -1269,6 +1311,7 @@ export interface UserFieldRefs {
   readonly name: Prisma.FieldRef<"User", 'String'>
   readonly department: Prisma.FieldRef<"User", 'String'>
   readonly active: Prisma.FieldRef<"User", 'Boolean'>
+  readonly conversationState: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
 }
     

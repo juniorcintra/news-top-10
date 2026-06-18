@@ -38,4 +38,18 @@ export class UsersService {
   updateName(id: string, name: string) {
     return this.prisma.user.update({ where: { id }, data: { name } });
   }
+
+  setConversationState(id: string, state: object) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { conversationState: JSON.stringify(state) },
+    });
+  }
+
+  clearConversationState(id: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { conversationState: null },
+    });
+  }
 }

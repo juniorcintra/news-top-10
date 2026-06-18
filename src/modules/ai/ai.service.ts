@@ -117,6 +117,90 @@ export class AiService {
     }
   }
 
+  async generateFollowUpResponse(
+    userName: string | null,
+    pillar: string,
+    initialLabel: string,
+    followUpQuestion: string,
+    followUpLabel: string,
+    isCritical: boolean,
+    consecutiveCritical: number,
+  ): Promise<string> {
+    const name = userName ?? 'você';
+
+    if (!this.openai) {
+      return this.staticFollowUpResponse(
+        name,
+        pillar,
+        followUpLabel,
+        isCritical,
+        consecutiveCritical,
+      );
+    }
+
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: this.model,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          {
+            role: 'user',
+            content:
+              `${name} respondeu ao check-in de ${pillar}: "${initialLabel}". ` +
+              `Em seguida, perguntamos "${followUpQuestion}" e ele(a) respondeu "${followUpLabel}". ` +
+              `${isCritical && consecutiveCritical >= 3 ? 'ATENÇÃO: 3+ dias críticos consecutivos — acione suporte confidencial.' : ''}` +
+              'Gere uma resposta empática, personalizada e breve (máx. 3 frases).',
+          },
+        ],
+        max_tokens: 150,
+        temperature: 0.8,
+      });
+
+      return (
+        completion.choices[0]?.message?.content?.trim() ??
+        this.staticFollowUpResponse(
+          name,
+          pillar,
+          followUpLabel,
+          isCritical,
+          consecutiveCritical,
+        )
+      );
+    } catch (error) {
+      this.logger.error(`OpenAI follow-up error: ${(error as Error).message}`);
+      return this.staticFollowUpResponse(
+        name,
+        pillar,
+        followUpLabel,
+        isCritical,
+        consecutiveCritical,
+      );
+    }
+  }
+
+  private staticFollowUpResponse(
+    name: string,
+    pillar: string,
+    followUpLabel: string,
+    isCritical: boolean,
+    consecutiveCritical: number,
+  ): string {
+    if (consecutiveCritical >= 3 && isCritical) {
+      return STATIC_BURNOUT_ALERT;
+    }
+    if (isCritical) {
+      return (
+        `Obrigado por compartilhar, ${name}. ` +
+        `Percebo que ${pillar} está desafiador. ` +
+        'Lembre-se: buscar apoio é um sinal de força. 💙'
+      );
+    }
+    return (
+      `Entendido, ${name} — ${followUpLabel}. ` +
+      `Cada passo conta para melhorar seu ${pillar}. Continue se cuidando! 💙`
+    );
+  }
+
   async handleFreeText(
     userName: string | null,
     message: string,
