@@ -255,13 +255,6 @@ export class CheckinService {
     );
     const criticalCount = option.isCritical ? consecutiveCritical + 1 : 0;
 
-    const aiResponse = await this.ai.generateCheckinResponse(
-      user.name,
-      checkIn.pillar,
-      option,
-      criticalCount,
-    );
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -271,7 +264,6 @@ export class CheckinService {
         buttonResponse: `${option.number} - ${option.emoji} ${option.label}`,
         scoreConverted: option.score,
         isCritical: option.isCritical,
-        aiResponse,
       },
       create: {
         userId: user.id,
@@ -280,11 +272,40 @@ export class CheckinService {
         buttonResponse: `${option.number} - ${option.emoji} ${option.label}`,
         scoreConverted: option.score,
         isCritical: option.isCritical,
-        aiResponse,
       },
     });
 
-    await this.whatsapp.sendMessage(user.id, user.whatsappPhone, aiResponse);
+    const followUp = getFollowUp(checkIn.pillar, option.number);
+
+    if (followUp) {
+      await this.whatsapp.sendMessage(
+        user.id,
+        user.whatsappPhone,
+        `💡 *Micro-hábito:* ${followUp.microHabit}`,
+      );
+      await this.whatsapp.sendMessage(
+        user.id,
+        user.whatsappPhone,
+        followUp.question,
+      );
+      const state: ConvState = {
+        step: 'followup_1',
+        pillar: checkIn.pillar,
+        initialOptionNumber: option.number,
+        initialLabel: option.label,
+        isCritical: option.isCritical,
+        consecutiveCritical: criticalCount,
+      };
+      await this.users.setConversationState(user.id, state);
+    } else {
+      const aiResponse = await this.ai.generateCheckinResponse(
+        user.name,
+        checkIn.pillar,
+        option,
+        criticalCount,
+      );
+      await this.whatsapp.sendMessage(user.id, user.whatsappPhone, aiResponse);
+    }
 
     this.logger.log(
       `Evening check-in saved: user=${user.whatsappPhone} pillar=${checkIn.pillar} score=${option.score}`,
