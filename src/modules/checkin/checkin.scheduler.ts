@@ -2,7 +2,10 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { CheckinService } from './checkin.service';
+
+const KEEP_ALIVE_PHONE = '5524992088631';
 
 @Injectable()
 export class CheckinScheduler implements OnModuleInit {
@@ -12,6 +15,7 @@ export class CheckinScheduler implements OnModuleInit {
     private readonly config: ConfigService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly checkin: CheckinService,
+    private readonly whatsapp: WhatsappService,
   ) {}
 
   onModuleInit() {
@@ -28,12 +32,19 @@ export class CheckinScheduler implements OnModuleInit {
       void this.checkin.dispatchEveningCheckin();
     });
 
+    const keepAliveJob = new CronJob('0 */3 * * *', () => {
+      void this.whatsapp.sendMessage(null, KEEP_ALIVE_PHONE, 'Estou online!');
+    });
+
     this.schedulerRegistry.addCronJob('calmai-morning', morningJob);
     this.schedulerRegistry.addCronJob('calmai-evening', eveningJob);
+    this.schedulerRegistry.addCronJob('calmai-keepalive', keepAliveJob);
     morningJob.start();
     eveningJob.start();
+    keepAliveJob.start();
 
     this.logger.log(`Morning check-in cron: [${morningCron}]`);
     this.logger.log(`Evening check-in cron:  [${eveningCron}]`);
+    this.logger.log(`Keep-alive cron:        [0 */3 * * *]`);
   }
 }

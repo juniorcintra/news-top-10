@@ -13,7 +13,7 @@ export class WhatsappService {
   ) {}
 
   async sendMessage(
-    userId: string,
+    userId: string | null,
     phone: string,
     content: string,
   ): Promise<void> {
@@ -48,14 +48,16 @@ export class WhatsappService {
       }
     }
 
-    await this.prisma.messageLog.create({
-      data: {
-        userId,
-        direction: 'outbound',
-        content,
-        status,
-        providerResponse,
-      },
-    });
+    if (userId) {
+      await this.prisma.messageLog.create({
+        data: {
+          userId,
+          direction: 'outbound',
+          content,
+          status,
+          providerResponse,
+        },
+      });
+    }
   }
 }
